@@ -1,18 +1,24 @@
 javascript:(function() {
-    var imgList = document.querySelectorAll("[srcset]");
-    imgList.forEach(imgFunction);
-    function imgFunction(item, index) {
-        imageString = item.getAttribute('srcset');
-        if (imageString.includes(' 1080w')) {
-            bestImage = imageString.split('750w,')[1];
-            bestImage = bestImage.replace(' 1080w','');
-            window.open(bestImage);
+    postData = async () => {
+        var postResponse = await fetch(document.location.href + '?__a=1');
+        var postJson = await postResponse.json();
+        if (postJson["graphql"]["shortcode_media"]["is_video"] == true) {
+            window.open(postJson["graphql"]["shortcode_media"]["video_url"]);
+        } else if (postJson["graphql"]["shortcode_media"]["edge_sidecar_to_children"] != null) {
+            var mediaList = postJson["graphql"]["shortcode_media"]["edge_sidecar_to_children"]["edges"];
+            mediaList.forEach(mediaFinder);
+            function mediaFinder(item, index) {
+                if (item["node"]["is_video"] == true) {
+                    window.open(item["node"]["video_url"]);
+                } else {
+                    var qList = item["node"]["display_resources"];
+                    window.open(qList[qList.length-1]["src"]);
+                }
+            }
+        } else {
+            var qList = postJson["graphql"]["shortcode_media"]["display_resources"];
+            window.open(qList[qList.length-1]["src"]);
         }
-    }
-    var vidList = document.querySelectorAll("video");
-    vidList.forEach(vidFunction);
-    function vidFunction(item, index) {
-        vidString = item.getAttribute('src');
-        window.open(vidString);
-    }
+    };
+    postData();
 })();
